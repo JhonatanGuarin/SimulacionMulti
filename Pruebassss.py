@@ -25,6 +25,9 @@ PROCESS_COLORS = [(255, 99, 71), (50, 205, 50), (65, 105, 225), (255, 215, 0), (
 font = pygame.font.Font(None, 24)
 title_font = pygame.font.Font(None, 36)
 
+# Constante para el botón de pantalla completa
+FULLSCREEN_BUTTON_SIZE = 30
+
 class Process:
     def __init__(self, pid, arrival_time, burst_time):
         self.pid = pid
@@ -55,6 +58,7 @@ class MultilevelFeedbackQueue:
         self.scroll_offset = 0
         self.max_scroll = 0
         self.is_paused = False
+        self.is_fullscreen = False
 
     def generate_process(self):
         if self.total_processes_generated < self.max_processes and random.random() < 0.1:
@@ -156,6 +160,12 @@ class MultilevelFeedbackQueue:
         # Dibujar botón de play/pause
         self.draw_play_pause_button(screen)
 
+        # Dibujar botón de pantalla completa
+        self.draw_fullscreen_button(screen)
+
+        # Dibujar botón de regreso al menú
+        self.draw_return_to_menu_button(screen)
+
     def draw_process(self, screen, process, is_current=False, bottom=False):
         bar_width = 120
         bar_height = 30
@@ -201,6 +211,24 @@ class MultilevelFeedbackQueue:
         color = GREEN if self.is_paused else RED
         pygame.draw.rect(screen, color, button_rect, border_radius=5)
         text = font.render("Play" if self.is_paused else "Pause", True, WHITE)
+        text_rect = text.get_rect(center=button_rect.center)
+        screen.blit(text, text_rect)
+        return button_rect
+
+    def draw_fullscreen_button(self, screen):
+        button_rect = pygame.Rect(WIDTH - FULLSCREEN_BUTTON_SIZE - 10, 10, FULLSCREEN_BUTTON_SIZE, FULLSCREEN_BUTTON_SIZE)
+        pygame.draw.rect(screen, WHITE, button_rect, 2)
+        if self.is_fullscreen:
+            pygame.draw.line(screen, WHITE, (button_rect.left + 5, button_rect.top + 5), (button_rect.right - 5, button_rect.bottom - 5), 2)
+            pygame.draw.line(screen, WHITE, (button_rect.left + 5, button_rect.bottom - 5), (button_rect.right - 5, button_rect.top + 5), 2)
+        else:
+            pygame.draw.rect(screen, WHITE, (button_rect.left + 5, button_rect.top + 5, button_rect.width - 10, button_rect.height - 10))
+        return button_rect
+
+    def draw_return_to_menu_button(self, screen):
+        button_rect = pygame.Rect(10, 10, 100, 30)
+        pygame.draw.rect(screen, HIGHLIGHT, button_rect, border_radius=5)
+        text = font.render("Menú", True, WHITE)
         text_rect = text.get_rect(center=button_rect.center)
         screen.blit(text, text_rect)
         return button_rect
@@ -257,7 +285,8 @@ class MultilevelFeedbackQueue:
                     x_offset += width
 
         # Dibujar la superficie de contenido en la ventana
-        screen.blit(content_surface, (window_rect.x + 10, window_rect.y + 70), 
+        screen.blit(content_surface, 
+                    (window_rect.x + 10, window_rect.y + 70),
                     (0, 0, window_rect.width - 20, window_rect.height - 80))
 
         # Dibujar la barra de desplazamiento
@@ -290,6 +319,7 @@ class MultiQueueMultiAlgorithm:
         self.scroll_offset = 0
         self.max_scroll = 0
         self.is_paused = False
+        self.is_fullscreen = False
 
     def generate_process(self):
         if self.total_processes_generated < self.max_processes and random.random() < 0.1:
@@ -402,6 +432,12 @@ class MultiQueueMultiAlgorithm:
         # Dibujar botón de play/pause
         self.draw_play_pause_button(screen)
 
+        # Dibujar botón de pantalla completa
+        self.draw_fullscreen_button(screen)
+
+        # Dibujar botón de regreso al menú
+        self.draw_return_to_menu_button(screen)
+
     def draw_process(self, screen, process, is_current=False, bottom=False):
         bar_width = 120
         bar_height = 30
@@ -447,6 +483,24 @@ class MultiQueueMultiAlgorithm:
         color = GREEN if self.is_paused else RED
         pygame.draw.rect(screen, color, button_rect, border_radius=5)
         text = font.render("Play" if self.is_paused else "Pause", True, WHITE)
+        text_rect = text.get_rect(center=button_rect.center)
+        screen.blit(text, text_rect)
+        return button_rect
+
+    def draw_fullscreen_button(self, screen):
+        button_rect = pygame.Rect(WIDTH - FULLSCREEN_BUTTON_SIZE - 10, 10, FULLSCREEN_BUTTON_SIZE, FULLSCREEN_BUTTON_SIZE)
+        pygame.draw.rect(screen, WHITE, button_rect, 2)
+        if self.is_fullscreen:
+            pygame.draw.line(screen, WHITE, (button_rect.left + 5, button_rect.top + 5), (button_rect.right - 5, button_rect.bottom - 5), 2)
+            pygame.draw.line(screen, WHITE, (button_rect.left + 5, button_rect.bottom - 5), (button_rect.right - 5, button_rect.top + 5), 2)
+        else:
+            pygame.draw.rect(screen, WHITE, (button_rect.left + 5, button_rect.top + 5, button_rect.width - 10, button_rect.height - 10))
+        return button_rect
+
+    def draw_return_to_menu_button(self, screen):
+        button_rect = pygame.Rect(10, 10, 100, 30)
+        pygame.draw.rect(screen, HIGHLIGHT, button_rect, border_radius=5)
+        text = font.render("Menú", True, WHITE)
         text_rect = text.get_rect(center=button_rect.center)
         screen.blit(text, text_rect)
         return button_rect
@@ -510,7 +564,9 @@ class MultiQueueMultiAlgorithm:
         if content_height > window_rect.height - 80:
             scroll_height = (window_rect.height - 80) * (window_rect.height - 80) / content_height
             scroll_pos = (window_rect.height - 80 - scroll_height) * self.scroll_offset / (content_height - window_rect.height + 80)
-            pygame.draw.rect(screen, WHITE, (window_rect.right - 20, window_rect.y + 70 + scroll_pos, 10, scroll_height))
+            pygame.draw.rect(screen, WHITE, (window_rect.right - 20, window_rect.y +
+
+ 70 + scroll_pos, 10, scroll_height))
 
         self.max_scroll = max(0, content_height - window_rect.height + 80)
 
@@ -633,12 +689,15 @@ def get_simulation_parameters(simulation_type):
     return None
 
 def main():
+    global WIDTH, HEIGHT, screen
     clock = pygame.time.Clock()
     simulation = None
     running = True
     main_menu = True
     completed_button_rect = None
     play_pause_button_rect = None
+    fullscreen_button_rect = None
+    return_to_menu_button_rect = None
 
     while running:
         if main_menu:
@@ -670,12 +729,26 @@ def main():
                         simulation.show_completed = not simulation.show_completed
                     elif play_pause_button_rect and play_pause_button_rect.collidepoint(event.pos):
                         simulation.is_paused = not simulation.is_paused
+                    elif fullscreen_button_rect and fullscreen_button_rect.collidepoint(event.pos):
+                        simulation.is_fullscreen = not simulation.is_fullscreen
+                        if simulation.is_fullscreen:
+                            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                        else:
+                            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+                    elif return_to_menu_button_rect and return_to_menu_button_rect.collidepoint(event.pos):
+                        main_menu = True
+                        simulation = None
+                        screen = pygame.display.set_mode((WIDTH, HEIGHT))
                     elif simulation.show_completed:
                         simulation.handle_scroll(event)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        main_menu = True
-                        simulation = None
+                        if simulation.is_fullscreen:
+                            simulation.is_fullscreen = False
+                            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+                        else:
+                            main_menu = True
+                            simulation = None
 
             if simulation:
                 simulation.update()
@@ -683,9 +756,11 @@ def main():
                 simulation.draw(screen)
                 completed_button_rect = simulation.draw_completed_button(screen)
                 play_pause_button_rect = simulation.draw_play_pause_button(screen)
+                fullscreen_button_rect = simulation.draw_fullscreen_button(screen)
+                return_to_menu_button_rect = simulation.draw_return_to_menu_button(screen)
                 pygame.display.flip()
 
-        clock.tick(10)  # Limit to 10 FPS
+        clock.tick(10)  # Limitar a 10 FPS
 
     pygame.quit()
     sys.exit()
