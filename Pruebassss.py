@@ -102,11 +102,13 @@ class MultilevelFeedbackQueue:
         self.current_time += 1
 
     def draw(self, screen):
+        screen_width, screen_height = screen.get_size()
+        
         # Dibujar título
         title = title_font.render("Simulador de Colas Multinivel con Retroalimentación", True, WHITE)
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 20))
+        screen.blit(title, (screen_width // 2 - title.get_width() // 2, 20))
 
-        queue_height = (HEIGHT - 300) // self.num_queues
+        queue_height = (screen_height - 300) // self.num_queues
         start_y = 100
 
         for i, queue in enumerate(self.queues):
@@ -114,10 +116,10 @@ class MultilevelFeedbackQueue:
             # Dibujar fondo de la cola con gradiente
             for j in range(queue_height):
                 alpha = 100 + (155 * j // queue_height)
-                pygame.draw.rect(screen, (*HIGHLIGHT[:3], alpha), (50, y_pos + j, WIDTH - 100, 1))
+                pygame.draw.rect(screen, (*HIGHLIGHT[:3], alpha), (50, y_pos + j, screen_width - 100, 1))
             
             # Borde de la cola
-            pygame.draw.rect(screen, WHITE, (50, y_pos, WIDTH - 100, queue_height), 2)
+            pygame.draw.rect(screen, WHITE, (50, y_pos, screen_width - 100, queue_height), 2)
             
             # Etiqueta de la cola (dentro del recuadro)
             text = font.render(f"Cola {i}: Quantum = {self.time_quantum[i]}", True, WHITE)
@@ -131,13 +133,15 @@ class MultilevelFeedbackQueue:
 
             if len(queue) > 8:
                 text = font.render(f"+{len(queue) - 8} más", True, WHITE)
-                screen.blit(text, (WIDTH - 150, y_pos + queue_height // 2))
+                screen.blit(text, (screen_width - 150, y_pos + queue_height // 2))
 
         if self.current_process:
             self.draw_process(screen, self.current_process, is_current=True, bottom=True)
 
         # Información general en un recuadro al final
-        info_rect = pygame.Rect(50, HEIGHT - 80, WIDTH - 100, 60)
+        info_rect_height = 60
+        info_rect_y = screen_height - info_rect_height - (20 if self.is_fullscreen else 0)
+        info_rect = pygame.Rect(50, info_rect_y, screen_width - 100, info_rect_height)
         pygame.draw.rect(screen, GRAY, info_rect)
         pygame.draw.rect(screen, WHITE, info_rect, 2)
         
@@ -167,10 +171,11 @@ class MultilevelFeedbackQueue:
         self.draw_return_to_menu_button(screen)
 
     def draw_process(self, screen, process, is_current=False, bottom=False):
+        screen_width, screen_height = screen.get_size()
         bar_width = 120
         bar_height = 30
-        x = process.x if not bottom else WIDTH // 2 - bar_width // 2
-        y = process.y if not bottom else HEIGHT - 100
+        x = process.x if not bottom else screen_width // 2 - bar_width // 2
+        y = process.y if not bottom else screen_height - 100 - (20 if self.is_fullscreen else 0)
 
         # Dibujar barra de progreso con efecto de brillo
         progress = (process.burst_time - process.remaining_time) / process.burst_time
@@ -199,7 +204,8 @@ class MultilevelFeedbackQueue:
             screen.blit(text, (x, y - 30))
 
     def draw_completed_button(self, screen):
-        button_rect = pygame.Rect(WIDTH - 280, HEIGHT - 120, 230, 30)
+        screen_width, screen_height = screen.get_size()
+        button_rect = pygame.Rect(screen_width - 280, screen_height - 120 - (20 if self.is_fullscreen else 0), 230, 30)
         pygame.draw.rect(screen, HIGHLIGHT, button_rect, border_radius=5)
         text = font.render("Ver Procesos Completados", True, WHITE)
         text_rect = text.get_rect(center=button_rect.center)
@@ -207,7 +213,8 @@ class MultilevelFeedbackQueue:
         return button_rect
 
     def draw_play_pause_button(self, screen):
-        button_rect = pygame.Rect(50, HEIGHT - 120, 100, 30)
+        screen_width, screen_height = screen.get_size()
+        button_rect = pygame.Rect(50, screen_height - 120 - (20 if self.is_fullscreen else 0), 100, 30)
         color = GREEN if self.is_paused else RED
         pygame.draw.rect(screen, color, button_rect, border_radius=5)
         text = font.render("Play" if self.is_paused else "Pause", True, WHITE)
@@ -216,7 +223,8 @@ class MultilevelFeedbackQueue:
         return button_rect
 
     def draw_fullscreen_button(self, screen):
-        button_rect = pygame.Rect(WIDTH - FULLSCREEN_BUTTON_SIZE - 10, 10, FULLSCREEN_BUTTON_SIZE, FULLSCREEN_BUTTON_SIZE)
+        screen_width, _ = screen.get_size()
+        button_rect = pygame.Rect(screen_width - FULLSCREEN_BUTTON_SIZE - 10, 10, FULLSCREEN_BUTTON_SIZE, FULLSCREEN_BUTTON_SIZE)
         pygame.draw.rect(screen, WHITE, button_rect, 2)
         if self.is_fullscreen:
             pygame.draw.line(screen, WHITE, (button_rect.left + 5, button_rect.top + 5), (button_rect.right - 5, button_rect.bottom - 5), 2)
@@ -234,7 +242,8 @@ class MultilevelFeedbackQueue:
         return button_rect
 
     def draw_completed_processes(self, screen):
-        window_rect = pygame.Rect(WIDTH // 4, HEIGHT // 4, WIDTH // 2, HEIGHT // 2)
+        screen_width, screen_height = screen.get_size()
+        window_rect = pygame.Rect(screen_width // 4, screen_height // 4, screen_width // 2, screen_height // 2)
         pygame.draw.rect(screen, GRAY, window_rect)
         pygame.draw.rect(screen, WHITE, window_rect, 2)
 
@@ -262,7 +271,8 @@ class MultilevelFeedbackQueue:
                          (window_rect.right - 10, window_rect.y + 65), 2)
 
         # Crear una superficie para el contenido con scroll
-        content_height = max(window_rect.height - 100, len(self.completed_processes) * 30 + 10)
+        content_height = max(window_rect.height - 100, 
+ len(self.completed_processes) * 30 + 10)
         content_surface = pygame.Surface((window_rect.width - 20, content_height))
         content_surface.fill(GRAY)
 
@@ -372,11 +382,13 @@ class MultiQueueMultiAlgorithm:
         self.completed_processes.append(process)
 
     def draw(self, screen):
+        screen_width, screen_height = screen.get_size()
+        
         # Dibujar título
         title = title_font.render("Simulador de Colas Multinivel con Retroalimentación y Algoritmos Diferentes", True, WHITE)
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 20))
+        screen.blit(title, (screen_width // 2 - title.get_width() // 2, 20))
 
-        queue_height = (HEIGHT - 300) // 3
+        queue_height = (screen_height - 300) // 3
         start_y = 100
 
         algorithms = ["Round Robin", "Shortest Job First", "First Come First Served"]
@@ -385,10 +397,10 @@ class MultiQueueMultiAlgorithm:
             # Dibujar fondo de la cola con gradiente
             for j in range(queue_height):
                 alpha = 100 + (155 * j // queue_height)
-                pygame.draw.rect(screen, (*HIGHLIGHT[:3], alpha), (50, y_pos + j, WIDTH - 100, 1))
+                pygame.draw.rect(screen, (*HIGHLIGHT[:3], alpha), (50, y_pos + j, screen_width - 100, 1))
             
             # Borde de la cola
-            pygame.draw.rect(screen, WHITE, (50, y_pos, WIDTH - 100, queue_height), 2)
+            pygame.draw.rect(screen, WHITE, (50, y_pos, screen_width - 100, queue_height), 2)
             
             # Etiqueta de la cola (dentro del recuadro)
             quantum_text = f"Quantum: {self.time_quantum[i]}" if i < 2 else "Quantum: ∞"
@@ -403,13 +415,15 @@ class MultiQueueMultiAlgorithm:
 
             if len(queue) > 8:
                 text = font.render(f"+{len(queue) - 8} más", True, WHITE)
-                screen.blit(text, (WIDTH - 150, y_pos + queue_height // 2))
+                screen.blit(text, (screen_width - 150, y_pos + queue_height // 2))
 
         if self.current_process:
             self.draw_process(screen, self.current_process, is_current=True, bottom=True)
 
         # Información general en un recuadro al final
-        info_rect = pygame.Rect(50, HEIGHT - 80, WIDTH - 100, 60)
+        info_rect_height = 60
+        info_rect_y = screen_height - info_rect_height - (20 if self.is_fullscreen else 0)
+        info_rect = pygame.Rect(50, info_rect_y, screen_width - 100, info_rect_height)
         pygame.draw.rect(screen, GRAY, info_rect)
         pygame.draw.rect(screen, WHITE, info_rect, 2)
         
@@ -439,10 +453,11 @@ class MultiQueueMultiAlgorithm:
         self.draw_return_to_menu_button(screen)
 
     def draw_process(self, screen, process, is_current=False, bottom=False):
+        screen_width, screen_height = screen.get_size()
         bar_width = 120
         bar_height = 30
-        x = process.x if not bottom else WIDTH // 2 - bar_width // 2
-        y = process.y if not bottom else HEIGHT - 100
+        x = process.x if not bottom else screen_width // 2 - bar_width // 2
+        y = process.y if not bottom else screen_height - 100 - (20 if self.is_fullscreen else 0)
 
         # Dibujar barra de progreso con efecto de brillo
         progress = (process.burst_time - process.remaining_time) / process.burst_time
@@ -471,7 +486,8 @@ class MultiQueueMultiAlgorithm:
             screen.blit(text, (x, y - 30))
 
     def draw_completed_button(self, screen):
-        button_rect = pygame.Rect(WIDTH - 280, HEIGHT - 120, 230, 30)
+        screen_width, screen_height = screen.get_size()
+        button_rect = pygame.Rect(screen_width - 280, screen_height - 120 - (20 if self.is_fullscreen else 0), 230, 30)
         pygame.draw.rect(screen, HIGHLIGHT, button_rect, border_radius=5)
         text = font.render("Ver Procesos Completados", True, WHITE)
         text_rect = text.get_rect(center=button_rect.center)
@@ -479,7 +495,8 @@ class MultiQueueMultiAlgorithm:
         return button_rect
 
     def draw_play_pause_button(self, screen):
-        button_rect = pygame.Rect(50, HEIGHT - 120, 100, 30)
+        screen_width, screen_height = screen.get_size()
+        button_rect = pygame.Rect(50, screen_height - 120 - (20 if self.is_fullscreen else 0), 100, 30)
         color = GREEN if self.is_paused else RED
         pygame.draw.rect(screen, color, button_rect, border_radius=5)
         text = font.render("Play" if self.is_paused else "Pause", True, WHITE)
@@ -488,7 +505,8 @@ class MultiQueueMultiAlgorithm:
         return button_rect
 
     def draw_fullscreen_button(self, screen):
-        button_rect = pygame.Rect(WIDTH - FULLSCREEN_BUTTON_SIZE - 10, 10, FULLSCREEN_BUTTON_SIZE, FULLSCREEN_BUTTON_SIZE)
+        screen_width, _ = screen.get_size()
+        button_rect = pygame.Rect(screen_width - FULLSCREEN_BUTTON_SIZE - 10, 10, FULLSCREEN_BUTTON_SIZE, FULLSCREEN_BUTTON_SIZE)
         pygame.draw.rect(screen, WHITE, button_rect, 2)
         if self.is_fullscreen:
             pygame.draw.line(screen, WHITE, (button_rect.left + 5, button_rect.top + 5), (button_rect.right - 5, button_rect.bottom - 5), 2)
@@ -506,7 +524,8 @@ class MultiQueueMultiAlgorithm:
         return button_rect
 
     def draw_completed_processes(self, screen):
-        window_rect = pygame.Rect(WIDTH // 4, HEIGHT // 4, WIDTH // 2, HEIGHT // 2)
+        screen_width, screen_height = screen.get_size()
+        window_rect = pygame.Rect(screen_width // 4, screen_height // 4, screen_width // 2, screen_height // 2)
         pygame.draw.rect(screen, GRAY, window_rect)
         pygame.draw.rect(screen, WHITE, window_rect, 2)
 
@@ -564,9 +583,7 @@ class MultiQueueMultiAlgorithm:
         if content_height > window_rect.height - 80:
             scroll_height = (window_rect.height - 80) * (window_rect.height - 80) / content_height
             scroll_pos = (window_rect.height - 80 - scroll_height) * self.scroll_offset / (content_height - window_rect.height + 80)
-            pygame.draw.rect(screen, WHITE, (window_rect.right - 20, window_rect.y +
-
- 70 + scroll_pos, 10, scroll_height))
+            pygame.draw.rect(screen, WHITE, (window_rect.right - 20, window_rect.y + 70 + scroll_pos, 10, scroll_height))
 
         self.max_scroll = max(0, content_height - window_rect.height + 80)
 
@@ -578,9 +595,10 @@ class MultiQueueMultiAlgorithm:
                 self.scroll_offset = min(self.max_scroll, self.scroll_offset + 30)
 
 def draw_main_menu(screen):
+    screen_width, screen_height = screen.get_size()
     screen.fill(BACKGROUND)
     title = title_font.render("Simulador de Planificación de Procesos", True, WHITE)
-    screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 100))
+    screen.blit(title, (screen_width // 2 - title.get_width() // 2, 100))
 
     options = [
         "1. Colas Multinivel con Retroalimentación",
@@ -589,7 +607,7 @@ def draw_main_menu(screen):
     
     buttons = []
     for i, option in enumerate(options):
-        button_rect = pygame.Rect(WIDTH // 2 - 200, 200 + i * 60, 400, 50)
+        button_rect = pygame.Rect(screen_width // 2 - 300, 200 + i * 60, 600, 50)
         pygame.draw.rect(screen, HIGHLIGHT, button_rect, border_radius=5)
         text = font.render(option, True, WHITE)
         text_rect = text.get_rect(center=button_rect.center)
@@ -599,9 +617,10 @@ def draw_main_menu(screen):
     return buttons
 
 def get_simulation_parameters(simulation_type):
+    screen_width, screen_height = screen.get_size()
     screen.fill(BACKGROUND)
     title = title_font.render("Configuración de la Simulación", True, WHITE)
-    screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 100))
+    screen.blit(title, (screen_width // 2 - title.get_width() // 2, 100))
 
     input_boxes = []
     labels = []
@@ -612,12 +631,12 @@ def get_simulation_parameters(simulation_type):
 
     for i, label in enumerate(labels):
         text = font.render(label, True, WHITE)
-        screen.blit(text, (WIDTH // 2 - 200, 200 + i * 60))
-        input_box = pygame.Rect(WIDTH // 2 + 50, 195 + i * 60, 100, 32)
+        screen.blit(text, (screen_width // 2 - 200, 200 + i * 60))
+        input_box = pygame.Rect(screen_width // 2 + 50, 195 + i * 60, 100, 32)
         pygame.draw.rect(screen, WHITE, input_box, 2)
         input_boxes.append(input_box)
 
-    start_button = pygame.Rect(WIDTH // 2 - 50, 200 + len(labels) * 60, 100, 40)
+    start_button = pygame.Rect(screen_width // 2 - 50, 200 + len(labels) * 60, 100, 40)
     pygame.draw.rect(screen, HIGHLIGHT, start_button)
     start_text = font.render("Iniciar", True, WHITE)
     screen.blit(start_text, (start_button.x + 25, start_button.y + 10))
@@ -668,11 +687,11 @@ def get_simulation_parameters(simulation_type):
                     input_values[active_box] += event.unicode
 
         screen.fill(BACKGROUND)
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 100))
+        screen.blit(title, (screen_width // 2 - title.get_width() // 2, 100))
 
         for i, (label, box, value) in enumerate(zip(labels, input_boxes, input_values)):
             text = font.render(label, True, WHITE)
-            screen.blit(text, (WIDTH // 2 - 200, 200 + i * 60))
+            screen.blit(text, (screen_width // 2 - 200, 200 + i * 60))
             pygame.draw.rect(screen, WHITE, box, 2)
             text_surface = font.render(value, True, WHITE)
             screen.blit(text_surface, (box.x + 5, box.y + 5))
@@ -682,7 +701,7 @@ def get_simulation_parameters(simulation_type):
 
         if error_message:
             error_text = font.render(error_message, True, RED)
-            screen.blit(error_text, (WIDTH // 2 - error_text.get_width() // 2, 150))
+            screen.blit(error_text, (screen_width // 2 - error_text.get_width() // 2, 150))
 
         pygame.display.flip()
 
